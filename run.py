@@ -1,0 +1,3 @@
+#! /usr/bin/env python
+from app import app
+app.run(debug=True,host="192.168.1.22",port=8080)
