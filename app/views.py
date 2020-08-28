@@ -28,7 +28,7 @@ def test():
     data = request.data
     print("test")
     print (data)
-    response = jsonify(test="eliran test")
+    response = jsonify(test="im alive!")
     return response
 
 @app.route('/about/')
@@ -57,10 +57,16 @@ def add_user():
         #password = data["password"]
         user = User(name, email)
         db.session.add(user)
-        db.session.commit()
+        try:
+            db.session.commit()
+            statusData = "success"
+            flash('User successfully added')
+        except:
+            statusData = "fail"
+            flash('User did not added')
+        response = jsonify(status=statusData)
 
-        flash('User successfully added')
-        return redirect(url_for('show_users'))
+        return response
         """""
         if user_form.validate_on_submit():
             # Get validated data from form
