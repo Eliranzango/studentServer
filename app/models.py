@@ -18,7 +18,7 @@ class studentData(db.Model):
     id = db.Column(db.Integer, primary_key = True)
     institute = db.Column(db.String(255))
     major = db.Column(db.String(255))
-    year = db.Column(db.Integer(255))
+    year = db.Column(db.Integer)
 
     def __init__(self, institute, major,year):
         self.institute = institute
@@ -48,7 +48,7 @@ class geoData(db.Model):
 
     def __repr__(self):
         return '<geoDataZip %r>' % self.zip_code
-
+"""""
 class courseData(db.Model):
     __tablename__ = 'course_data'
     id = db.Column(db.Integer)
@@ -60,3 +60,4 @@ class courseData(db.Model):
 
     def __repr__(self):
         return '<courseData %r>' % self.course
+"""""

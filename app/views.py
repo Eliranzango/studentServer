@@ -6,11 +6,12 @@ This file creates your application.
 """
 
 from app import app, db
-from flask import render_template, request, redirect, url_for, flash
-from app.forms import UserForm
-from app.models import User
-from flask import jsonify
+from flask import render_template, request, redirect, url_for, flash, make_response, jsonify
+from app.forms import *
+from app.models import *
 import json
+
+
 # import sqlite3
 
 ###
@@ -29,7 +30,11 @@ def test():
     print("test")
     print (data)
     response = jsonify(test="im alive!")
-    return response
+    res= app.make_response(response)
+    res.headers['Access-Control-Allow-Origin'] = '*'
+    res.headers['Access-Control-Allow-Credentials'] = 'True'
+    res.set_cookie()
+    return res
 
 @app.route('/about/')
 def about():
@@ -61,10 +66,12 @@ def add_user():
             db.session.commit()
             statusData = "success"
             flash('User successfully added')
+            status = 200
         except:
             statusData = "fail"
             flash('User did not added')
-        response = jsonify(status=statusData)
+            status = 500
+        response = jsonify(status=statusData),status
 
         return response
         """""
