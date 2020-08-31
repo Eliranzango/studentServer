@@ -33,8 +33,16 @@ def test():
     res= app.make_response(response)
     res.headers['Access-Control-Allow-Origin'] = '*'
     res.headers['Access-Control-Allow-Credentials'] = 'True'
-    res.set_cookie()
+    res.set_cookie('userID', '12345')
     return res
+
+@app.route('/markers',methods=['GET'])
+def markers():
+    d1 = {'name': 'eliran', 'email': 'Datacamp','phone':'2323','location':{'lat':32.0170737,'lng':34.7681623}}
+    d2 = {'name': 'Eden', 'email': 'blalba', 'phone': '2323', 'location': {'lat': 32.0154278, 'lng': 34.7705851}}
+    data =[d1,d2]
+    response = jsonify(data)
+    return response,200
 
 @app.route('/about/')
 def about():
@@ -44,7 +52,6 @@ def about():
 @app.route('/users')
 def show_users():
     users = db.session.query(User).all() # or you could have used User.query.all()
-
     return render_template('show_users.html', users=users)
 
 @app.route('/add-user', methods=['POST', 'GET'])
@@ -66,10 +73,14 @@ def add_user():
             db.session.commit()
             statusData = "success"
             flash('User successfully added')
+            print ("User successfully added")
             status = 200
+            id = User.query.filter_by(username=user).first()
+            print(id)
         except:
             statusData = "fail"
             flash('User did not added')
+            print("User failed to be added")
             status = 500
         response = jsonify(status=statusData),status
 
