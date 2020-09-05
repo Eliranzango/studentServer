@@ -20,7 +20,8 @@ class studentData(db.Model):
     major = db.Column(db.String(255))
     year = db.Column(db.Integer)
 
-    def __init__(self, institute, major,year):
+    def __init__(self,id, institute, major,year):
+        self.id = id
         self.institute = institute
         self.major = major
         self.year = year
@@ -38,7 +39,8 @@ class geoData(db.Model):
     latitude = db.Column(db.NUMERIC(9,6))
     longitude = db.Column(db.NUMERIC(10,6))
 
-    def __init__(self, city, street,street_num,zip_code,latitude,longitude):
+    def __init__(self, id, city, street,street_num,zip_code,latitude,longitude):
+        self.id = id
         self.city = city
         self.street = street
         self.street_num = street_num
@@ -48,16 +50,16 @@ class geoData(db.Model):
 
     def __repr__(self):
         return '<geoDataZip %r>' % self.zip_code
-"""""
+
 class courseData(db.Model):
     __tablename__ = 'course_data'
-    id = db.Column(db.Integer)
+    id = db.Column(db.Integer, primary_key = True)
+    userID = db.Column(db.Integer)
     course = db.Column(db.String(255))
 
     def __init__(self, id,course):
-        self.id = id
+        self.userID = id
         self.course = course
 
     def __repr__(self):
         return '<courseData %r>' % self.course
-"""""

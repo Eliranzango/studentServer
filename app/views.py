@@ -23,6 +23,34 @@ def home():
     """Render website's home page."""
     return render_template('home.html')
 
+@app.route('/login',methods=['POST'])
+def login():
+    data = request.get_data()
+    my_json = data.decode('utf8').replace("'", '"')
+    data = json.loads(my_json)
+    s = json.dumps(data, indent=4, sort_keys=True)
+    print(s)
+    email = data["email"]
+    try:
+        user = User.query.filter_by(email=email).first()
+        status = 200
+        statusData = "success"
+        id = user.id
+    except:
+        status = 404
+        statusData = "fail"
+        id = 0
+    response = jsonify(status=statusData), status
+    res = app.make_response(response)
+    res.headers['Access-Control-Allow-Origin'] = '*'
+    res.headers['Access-Control-Allow-Credentials'] = 'True'
+    res.set_cookie('userID', json.dumps(id))
+    return res
+
+@app.route('/user-marker',methods=['GET'])
+def user_marker():
+    userID = request.cookies.get('userID')
+    print (userID)
 
 @app.route('/test',methods=['POST','GET'])
 def test():
@@ -34,6 +62,72 @@ def test():
     res.headers['Access-Control-Allow-Origin'] = '*'
     res.headers['Access-Control-Allow-Credentials'] = 'True'
     res.set_cookie('userID', '12345')
+    return res
+
+@app.route('/add-user',methods=['POST','GET'])
+def full_data():
+    data = request.get_data()
+    my_json = data.decode('utf8').replace("'", '"')
+    data = json.loads(my_json)
+    s = json.dumps(data, indent=4, sort_keys=True)
+    print(s)
+    name = data["name"]
+    email = data["email"]
+    phone = data["phone"]
+    street = data["street"]
+    streetNum = data["streetNum"]
+    city = data["city"]
+    country = data["country"]
+    coords = data["coords"]
+    lat = coords["lat"]
+    lng = coords["lng"]
+    institute = data["institute"]
+    major= data["major"]
+    year = data["year"]
+    courses = data["courses"]
+    zipCode = 0
+    user = User(name, email)
+    db.session.add(user)
+    try:
+        db.session.commit()
+        statusData = "success"
+        flash('User successfully added')
+        id = user.id
+        print("User successfully added: ", id)
+        status = 200
+        print(id)
+    except:
+        statusData = "fail"
+        flash('User did not added')
+        print("User failed to be added")
+        id = 0
+        status = 404
+
+    if(status ==200):
+        student = studentData(id,institute,major,year)
+        db.session.add(student)
+        try:
+            db.session.commit()
+        except:
+            print("error adding student to DB")
+        geo = geoData(id,city,street,streetNum,zipCode,lat,lng)
+        db.session.add(geo)
+        try:
+            db.session.commit()
+        except:
+            print("error adding geo to DB")
+        for c in courses:
+            cour = courseData(id,c)
+            db.session.add(cour)
+        try:
+            db.session.commit()
+        except:
+            print ("error adding course data to DB")
+    response = jsonify(status=statusData), status
+    res = app.make_response(response)
+    res.headers['Access-Control-Allow-Origin'] = '*'
+    res.headers['Access-Control-Allow-Credentials'] = 'True'
+    res.set_cookie('userID', json.dumps(id))
     return res
 
 @app.route('/markers',methods=['GET'])
@@ -49,12 +143,21 @@ def about():
     """Render the website's about page."""
     return render_template('about.html', name="Mary Jane")
 
-@app.route('/users')
+@app.route('/user-table')
 def show_users():
     users = db.session.query(User).all() # or you could have used User.query.all()
-    return render_template('show_users.html', users=users)
+    data = []
+    for user in users:
+        data.append({'name':user.name,'email':user.email,'id':user.id})
+    d = json.dumps(data)
+    print(d)
+    response = d, 200
+    res = app.make_response(response)
+    res.headers['Access-Control-Allow-Origin'] = '*'
+    res.headers['Access-Control-Allow-Credentials'] = 'True'
+    return res
 
-@app.route('/add-user', methods=['POST', 'GET'])
+@app.route('/add_user', methods=['POST', 'GET'])
 def add_user():
     user_form = UserForm()
     if request.method == 'POST':
@@ -73,18 +176,22 @@ def add_user():
             db.session.commit()
             statusData = "success"
             flash('User successfully added')
-            print ("User successfully added")
+            id = user.id
+            print ("User successfully added: ",id)
             status = 200
-            id = User.query.filter_by(username=user).first()
             print(id)
         except:
             statusData = "fail"
             flash('User did not added')
             print("User failed to be added")
+            id = 0
             status = 500
         response = jsonify(status=statusData),status
-
-        return response
+        res= app.make_response(response)
+        res.headers['Access-Control-Allow-Origin'] = '*'
+        res.headers['Access-Control-Allow-Credentials'] = 'True'
+        res.set_cookie('userID', json.dumps(id))
+        return res
         """""
         if user_form.validate_on_submit():
             # Get validated data from form
