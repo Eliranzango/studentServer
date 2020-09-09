@@ -209,6 +209,30 @@ def add_user():
     flash_errors(user_form)
     return render_template('add_user.html', form=user_form)
 
+@app.route('/delete-user', methods=['POST', 'GET'])
+def delete_user():
+    data = request.get_data()
+    my_json = data.decode('utf8').replace("'", '"')
+    print(my_json)
+    data = json.loads(my_json)
+    s = json.dumps(data, indent=4, sort_keys=True)
+    print(s)
+    deletId = data["id"]
+    User.query.filter(User.id == deletId).delete()
+    studentData.query.filter(studentData.id == deletId).delete()
+    geoData.query.filter(geoData.id == deletId).delete()
+    courseData.query.filter(courseData.userID == deletId).delete()
+    try:
+        db.session.commit()
+        statusData = "success"
+        status = 200
+    except:
+        statusData = "fail"
+        status = 500
+
+    return show_users()
+
+
 # Flash errors from the form if validation fails
 def flash_errors(form):
     for field, errors in form.errors.items():
