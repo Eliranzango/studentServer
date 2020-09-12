@@ -42,15 +42,25 @@ def login():
         id = 0
     response = jsonify(status=statusData), status
     res = app.make_response(response)
-    res.headers['Access-Control-Allow-Origin'] = '*'
-    res.headers['Access-Control-Allow-Credentials'] = 'True'
-    res.set_cookie('userID', json.dumps(id))
+    #res.headers['Access-Control-Allow-Origin'] = '*'
+    res.headers.add("Access-Control-Allow-Origin", "http://83.130.145.225:8080")
+    res.headers.add('Access-Control-Allow-Credentials', 'true')
+    #res.headers['Access-Control-Allow-Credentials'] = 'True'
+    res.set_cookie('userID', json.dumps(id),secure=False,samesite=None)
     return res
 
 @app.route('/user-marker',methods=['GET'])
 def user_marker():
     userID = request.cookies.get('userID')
-    print (userID)
+    print(userID)
+    d1 = {'name': 'eliran', 'email': 'Datacamp', 'phone': '2323', 'location': {'lat': 32.0170737, 'lng': 34.7681623}}
+    d2 = {'name': 'Eden', 'email': 'blalba', 'phone': '2323', 'location': {'lat': 32.0154278, 'lng': 34.7705851}}
+    data = d1
+    response = jsonify(data), 200
+    res = app.make_response(response)
+    res.headers.add("Access-Control-Allow-Origin", "http://83.130.145.225:8080")
+    res.headers.add('Access-Control-Allow-Credentials', 'true')
+    return res
 
 @app.route('/test',methods=['POST','GET'])
 def test():
@@ -135,8 +145,45 @@ def markers():
     d1 = {'name': 'eliran', 'email': 'Datacamp','phone':'2323','location':{'lat':32.0170737,'lng':34.7681623}}
     d2 = {'name': 'Eden', 'email': 'blalba', 'phone': '2323', 'location': {'lat': 32.0154278, 'lng': 34.7705851}}
     data =[d1,d2]
-    response = jsonify(data)
-    return response,200
+    response = jsonify(data),200
+    res = app.make_response(response)
+    res.headers.add("Access-Control-Allow-Origin", "http://83.130.145.225:8080")
+    res.headers.add("Access-Control-Allow-Credentials", "TRUE")
+    return res
+
+@app.route('/send-filter',methods=['POST'])
+def send_filter():
+    data = request.get_data()
+    my_json = data.decode('utf8').replace("'", '"')
+    data = json.loads(my_json)
+    s = json.dumps(data, indent=4, sort_keys=True)
+    print(s)
+    inst = data["institute"]
+    maj = data["major"]
+    year = data["year"]
+    courseNum = data["course"]
+    selectedIds = []
+    stu = studentData.query.filter((studentData.institute==inst)&(studentData.major==maj)&(studentData.year==year)).all()
+    courses = courseData.query.filter(courseData.course == courseNum).all()
+    for s in stu:
+        selectedIds.append(s.id)
+    for c in courses:
+        selectedIds.append(c.userID)
+    selectedIds = set(selectedIds) #remove multiple ids
+    filterdData = []
+    for id in selectedIds:
+        u = User.query.filter(User.id == id).first()
+        c = geoData.query.filter(geoData.id == id).first()
+        userData = {'name': u.name, 'email': u.email,'coords': {'lat': str(c.latitude), 'lng': str(c.longitude)}}
+        filterdData.append(userData)
+    status = 200
+    d = jsonify(filterdData)
+    print (d)
+    response = d, status
+    res = app.make_response(response)
+    res.headers['Access-Control-Allow-Origin'] = '*'
+    res.headers['Access-Control-Allow-Credentials'] = 'True'
+    return res
 
 @app.route('/about/')
 def about():
