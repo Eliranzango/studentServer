@@ -5,12 +5,14 @@ DROP TABLE IF EXISTS course_data;
 CREATE TABLE users (
   id integer primary key autoincrement,
   name string not null,
-  email string not null UNIQUE
+  email string not null UNIQUE,
+  phone string not null
 );
 CREATE TABLE geo_data (
   id integer primary key,
   city string not null,
   street string not null,
+  country string not null,
   street_num integer not null,
   zip_code integer not null,
   latitude NUMERIC(9,6) not null,

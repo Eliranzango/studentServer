@@ -52,13 +52,23 @@ def login():
 @app.route('/user-marker',methods=['GET'])
 def user_marker():
     userID = request.cookies.get('userID')
+    if (userID == None):
+        d = "ERROR: didnt get user ID in cookie"
+        print(d)
+        response = d, 404
+        res = app.make_response(response)
+        res.headers['Access-Control-Allow-Origin'] = '*'
+        res.headers['Access-Control-Allow-Credentials'] = 'True'
+        return res
     print(userID)
-    d1 = {'name': 'eliran', 'email': 'Datacamp', 'phone': '2323', 'location': {'lat': 32.0170737, 'lng': 34.7681623}}
-    d2 = {'name': 'Eden', 'email': 'blalba', 'phone': '2323', 'location': {'lat': 32.0154278, 'lng': 34.7705851}}
-    data = d1
-    response = jsonify(data), 200
+    id = int(userID)
+    u = User.query.filter(User.id == id).first()
+    c = geoData.query.filter(geoData.id == id).first()
+    userData = {'name': u.name, 'email': u.email,'phone': u.phone ,'location': {'lat': float(c.latitude), 'lng': float(c.longitude)}}
+    print(userData)
+    response = jsonify(userData), 200
     res = app.make_response(response)
-    res.headers.add("Access-Control-Allow-Origin", "http://83.130.145.225:8080")
+    res.headers.add("Access-Control-Allow-Origin", "*")
     res.headers.add('Access-Control-Allow-Credentials', 'true')
     return res
 
@@ -75,7 +85,7 @@ def test():
     return res
 
 @app.route('/add-user',methods=['POST','GET'])
-def full_data():
+def add_user_data():
     data = request.get_data()
     my_json = data.decode('utf8').replace("'", '"')
     data = json.loads(my_json)
@@ -88,7 +98,7 @@ def full_data():
     streetNum = data["streetNum"]
     city = data["city"]
     country = data["country"]
-    coords = data["coords"]
+    coords = data["location"]
     lat = coords["lat"]
     lng = coords["lng"]
     institute = data["institute"]
@@ -96,7 +106,7 @@ def full_data():
     year = data["year"]
     courses = data["courses"]
     zipCode = 0
-    user = User(name, email)
+    user = User(name, email,phone)
     db.session.add(user)
     try:
         db.session.commit()
@@ -120,7 +130,7 @@ def full_data():
             db.session.commit()
         except:
             print("error adding student to DB")
-        geo = geoData(id,city,street,streetNum,zipCode,lat,lng)
+        geo = geoData(id,city,country,street,streetNum,zipCode,lat,lng)
         db.session.add(geo)
         try:
             db.session.commit()
@@ -140,14 +150,78 @@ def full_data():
     res.set_cookie('userID', json.dumps(id))
     return res
 
-@app.route('/markers',methods=['GET'])
-def markers():
-    d1 = {'name': 'eliran', 'email': 'Datacamp','phone':'2323','location':{'lat':32.0170737,'lng':34.7681623}}
-    d2 = {'name': 'Eden', 'email': 'blalba', 'phone': '2323', 'location': {'lat': 32.0154278, 'lng': 34.7705851}}
-    data =[d1,d2]
-    response = jsonify(data),200
+@app.route('/update-user-info',methods=['POST','GET'])
+def update_user_data():
+    userID = request.cookies.get('userID')
+    #userID = 3
+    if (userID == None):
+        d = "ERROR: didnt get user ID in cookie"
+        print(d)
+        response = d, 404
+        res = app.make_response(response)
+        res.headers['Access-Control-Allow-Origin'] = '*'
+        res.headers['Access-Control-Allow-Credentials'] = 'True'
+        return res
+    selectedUser = User.query.filter(User.id == userID).first()
+    selectedGeoData = geoData.query.filter(geoData.id == userID).first()
+    selectedStuData = studentData.query.filter(studentData.id == userID).first()
+    courseData.query.filter(courseData.userID == userID).delete()
+    data = request.get_data()
+    my_json = data.decode('utf8').replace("'", '"')
+    data = json.loads(my_json)
+    s = json.dumps(data, indent=4, sort_keys=True)
+    print(s)
+    selectedUser.name = data["name"]
+    selectedUser.email = data["email"]
+    selectedUser.phone = data["phone"]
+    selectedGeoData.street = data["street"]
+    selectedGeoData.street_num = data["streetNum"]
+    selectedGeoData.city = data["city"]
+    selectedGeoData.country = data["country"]
+    coords = data["location"]
+    selectedGeoData.latitude = coords["lat"]
+    selectedGeoData.longitude = coords["lng"]
+    selectedStuData.institute = data["institute"]
+    selectedStuData.major= data["major"]
+    selectedStuData.year = data["year"]
+    courses = data["courses"]
+    for c in courses:
+        cour = courseData(userID, c)
+        db.session.add(cour)
+    try:
+        db.session.commit()
+        statusData = "success"
+        print("User successfully updated: ", userID)
+        status = 200
+        print(userID)
+    except:
+        statusData = "fail"
+        print("User failed to be updated")
+        userID = 0
+        status = 404
+
+    response = jsonify(status=statusData), status
     res = app.make_response(response)
-    res.headers.add("Access-Control-Allow-Origin", "http://83.130.145.225:8080")
+    res.headers['Access-Control-Allow-Origin'] = '*'
+    res.headers['Access-Control-Allow-Credentials'] = 'True'
+    return res
+
+@app.route('/users-marker',methods=['GET'])
+def markers():
+    users = db.session.query(User).all() # or you could have used User.query.all()
+    data = []
+    try:
+        for user in users:
+            loc = geoData.query.filter(geoData.id == user.id).first()
+            data.append({'name':user.name,'email':user.email,'id':user.id, 'phone':user.phone, 'location': {'lat': float(loc.latitude), 'lng': float(loc.longitude)}})
+        d = json.dumps(data)
+        print(d)
+        status = 200
+    except:
+        status = 404
+    response = jsonify(data),status
+    res = app.make_response(response)
+    res.headers.add("Access-Control-Allow-Origin", "*")
     res.headers.add("Access-Control-Allow-Credentials", "TRUE")
     return res
 
@@ -196,6 +270,36 @@ def show_users():
     data = []
     for user in users:
         data.append({'name':user.name,'email':user.email,'id':user.id})
+    d = json.dumps(data)
+    print(d)
+    response = d, 200
+    res = app.make_response(response)
+    res.headers['Access-Control-Allow-Origin'] = '*'
+    res.headers['Access-Control-Allow-Credentials'] = 'True'
+    return res
+
+
+@app.route('/get-user-info')
+def user_info():
+    userID = request.cookies.get('userID')
+    if (userID == None):
+        d = "ERROR: didnt get user ID in cookie"
+        print(d)
+        response = d, 404
+        res = app.make_response(response)
+        res.headers['Access-Control-Allow-Origin'] = '*'
+        res.headers['Access-Control-Allow-Credentials'] = 'True'
+        return res
+    print(userID)
+    id = int(userID)
+    u = User.query.filter(User.id == id).first()
+    g = geoData.query.filter(geoData.id == id).first()
+    s = studentData.query.filter(studentData.id == id).first()
+    cur = courseData.query.filter(courseData.userID == id).all()
+    course = []
+    for c in cur:
+        course.append(c.course)
+    data = {'name': u.name, 'email': u.email,'phone': u.phone ,'street':g.street,'streetNum':g.street_num,'city':g.city,'country':g.country,'location': {'lat': float(g.latitude), 'lng': float(g.longitude)},'institute':s.institute,'major':s.major,'year':s.year,'courses':course}
     d = json.dumps(data)
     print(d)
     response = d, 200
@@ -275,7 +379,7 @@ def delete_user():
         status = 200
     except:
         statusData = "fail"
-        status = 500
+        status = 404
 
     return show_users()
 
