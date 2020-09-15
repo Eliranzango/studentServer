@@ -47,7 +47,8 @@ def login():
     res.headers.add("Access-Control-Allow-Origin", "http://83.130.145.225:8080")
     res.headers.add('Access-Control-Allow-Credentials', 'true')
     #res.headers['Access-Control-Allow-Credentials'] = 'True'
-    res.set_cookie('userID', json.dumps(id),secure=False,samesite=None)
+    if (status != 404):
+        res.set_cookie('userID', json.dumps(id),secure=False,samesite=None,httponly=False)
     return res
 
 @app.route('/user-marker',methods=['GET'])
@@ -148,7 +149,7 @@ def add_user_data():
     res = app.make_response(response)
     res.headers['Access-Control-Allow-Origin'] = 'http://83.130.145.225:8080'
     res.headers['Access-Control-Allow-Credentials'] = 'true'
-    res.set_cookie('userID', json.dumps(id))
+    res.set_cookie('userID', json.dumps(id),secure=False,samesite=None,httponly=False)
     return res
 
 @app.route('/update-user-info',methods=['POST','GET'])
@@ -209,12 +210,15 @@ def update_user_data():
 
 @app.route('/users-marker',methods=['GET'])
 def markers():
+    userID = request.cookies.get('userID')
     users = db.session.query(User).all() # or you could have used User.query.all()
+    print("user id", userID)
     data = []
     try:
         for user in users:
-            loc = geoData.query.filter(geoData.id == user.id).first()
-            data.append({'name':user.name,'email':user.email,'id':user.id, 'phone':user.phone, 'location': {'lat': float(loc.latitude), 'lng': float(loc.longitude)}})
+            if(int(userID) != user.id):
+                loc = geoData.query.filter(geoData.id == user.id).first()
+                data.append({'name':user.name,'email':user.email,'id':user.id, 'phone':user.phone, 'location': {'lat': float(loc.latitude), 'lng': float(loc.longitude)}})
         d = json.dumps(data)
         print(d)
         status = 200
@@ -234,6 +238,8 @@ def send_filter():
     s = json.dumps(data, indent=4, sort_keys=True)
     print(s)
     inst = data["institute"]
+    if inst == None:
+        inst = '*'
     maj = data["major"]
     year = data["year"]
     courseNum = data["course"]
@@ -249,7 +255,7 @@ def send_filter():
     for id in selectedIds:
         u = User.query.filter(User.id == id).first()
         c = geoData.query.filter(geoData.id == id).first()
-        userData = {'name': u.name, 'email': u.email,'location': {'lat': str(c.latitude), 'lng': str(c.longitude)}}
+        userData = {'name': u.name, 'email': u.email,'location': {'lat': float(c.latitude), 'lng': float(c.longitude)}}
         filterdData.append(userData)
     status = 200
     d = jsonify(filterdData)
@@ -346,7 +352,7 @@ def add_user():
         res= app.make_response(response)
         res.headers['Access-Control-Allow-Origin'] = 'http://83.130.145.225:8080'
         res.headers['Access-Control-Allow-Credentials'] = 'true'
-        res.set_cookie('userID', json.dumps(id))
+        res.set_cookie('userID', json.dumps(id),secure=False,samesite=None,httponly=False)
         return res
         """""
         if user_form.validate_on_submit():
