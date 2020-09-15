@@ -1,8 +1,9 @@
 """
-Flask Documentation:     http://flask.pocoo.org/docs/
-Jinja2 Documentation:    http://jinja.pocoo.org/2/documentation/
-Werkzeug Documentation:  http://werkzeug.pocoo.org/documentation/
-This file creates your application.
+STUDENT FINDER VER 1.0
+server side
+ELIRAN ZANGO
+DOR HAIM
+EDEN TODUSI
 """
 
 from app import app, db
@@ -57,8 +58,8 @@ def user_marker():
         print(d)
         response = d, 404
         res = app.make_response(response)
-        res.headers['Access-Control-Allow-Origin'] = '*'
-        res.headers['Access-Control-Allow-Credentials'] = 'True'
+        res.headers['Access-Control-Allow-Origin'] = 'http://83.130.145.225:8080'
+        res.headers['Access-Control-Allow-Credentials'] = 'true'
         return res
     print(userID)
     id = int(userID)
@@ -68,7 +69,7 @@ def user_marker():
     print(userData)
     response = jsonify(userData), 200
     res = app.make_response(response)
-    res.headers.add("Access-Control-Allow-Origin", "*")
+    res.headers.add("Access-Control-Allow-Origin", "http://83.130.145.225:8080")
     res.headers.add('Access-Control-Allow-Credentials', 'true')
     return res
 
@@ -79,8 +80,8 @@ def test():
     print (data)
     response = jsonify(test="im alive!")
     res= app.make_response(response)
-    res.headers['Access-Control-Allow-Origin'] = '*'
-    res.headers['Access-Control-Allow-Credentials'] = 'True'
+    res.headers['Access-Control-Allow-Origin'] = 'http://83.130.145.225:8080'
+    res.headers['Access-Control-Allow-Credentials'] = 'true'
     res.set_cookie('userID', '12345')
     return res
 
@@ -145,8 +146,8 @@ def add_user_data():
             print ("error adding course data to DB")
     response = jsonify(status=statusData), status
     res = app.make_response(response)
-    res.headers['Access-Control-Allow-Origin'] = '*'
-    res.headers['Access-Control-Allow-Credentials'] = 'True'
+    res.headers['Access-Control-Allow-Origin'] = 'http://83.130.145.225:8080'
+    res.headers['Access-Control-Allow-Credentials'] = 'true'
     res.set_cookie('userID', json.dumps(id))
     return res
 
@@ -159,8 +160,8 @@ def update_user_data():
         print(d)
         response = d, 404
         res = app.make_response(response)
-        res.headers['Access-Control-Allow-Origin'] = '*'
-        res.headers['Access-Control-Allow-Credentials'] = 'True'
+        res.headers['Access-Control-Allow-Origin'] = 'http://83.130.145.225:8080'
+        res.headers['Access-Control-Allow-Credentials'] = 'true'
         return res
     selectedUser = User.query.filter(User.id == userID).first()
     selectedGeoData = geoData.query.filter(geoData.id == userID).first()
@@ -202,8 +203,8 @@ def update_user_data():
 
     response = jsonify(status=statusData), status
     res = app.make_response(response)
-    res.headers['Access-Control-Allow-Origin'] = '*'
-    res.headers['Access-Control-Allow-Credentials'] = 'True'
+    res.headers['Access-Control-Allow-Origin'] = 'http://83.130.145.225:8080'
+    res.headers['Access-Control-Allow-Credentials'] = 'true'
     return res
 
 @app.route('/users-marker',methods=['GET'])
@@ -221,8 +222,8 @@ def markers():
         status = 404
     response = jsonify(data),status
     res = app.make_response(response)
-    res.headers.add("Access-Control-Allow-Origin", "*")
-    res.headers.add("Access-Control-Allow-Credentials", "TRUE")
+    res.headers.add("Access-Control-Allow-Origin", "http://83.130.145.225:8080")
+    res.headers.add("Access-Control-Allow-Credentials", "true")
     return res
 
 @app.route('/send-filter',methods=['POST'])
@@ -248,15 +249,15 @@ def send_filter():
     for id in selectedIds:
         u = User.query.filter(User.id == id).first()
         c = geoData.query.filter(geoData.id == id).first()
-        userData = {'name': u.name, 'email': u.email,'coords': {'lat': str(c.latitude), 'lng': str(c.longitude)}}
+        userData = {'name': u.name, 'email': u.email,'location': {'lat': str(c.latitude), 'lng': str(c.longitude)}}
         filterdData.append(userData)
     status = 200
     d = jsonify(filterdData)
     print (d)
     response = d, status
     res = app.make_response(response)
-    res.headers['Access-Control-Allow-Origin'] = '*'
-    res.headers['Access-Control-Allow-Credentials'] = 'True'
+    res.headers['Access-Control-Allow-Origin'] = 'http://83.130.145.225:8080'
+    res.headers['Access-Control-Allow-Credentials'] = 'true'
     return res
 
 @app.route('/about/')
@@ -274,12 +275,12 @@ def show_users():
     print(d)
     response = d, 200
     res = app.make_response(response)
-    res.headers['Access-Control-Allow-Origin'] = '*'
-    res.headers['Access-Control-Allow-Credentials'] = 'True'
+    res.headers['Access-Control-Allow-Origin'] = 'http://83.130.145.225:8080'
+    res.headers['Access-Control-Allow-Credentials'] = 'true'
     return res
 
 
-@app.route('/get-user-info')
+@app.route('/get-user-info',methods=['GET'])
 def user_info():
     userID = request.cookies.get('userID')
     if (userID == None):
@@ -287,28 +288,32 @@ def user_info():
         print(d)
         response = d, 404
         res = app.make_response(response)
-        res.headers['Access-Control-Allow-Origin'] = '*'
-        res.headers['Access-Control-Allow-Credentials'] = 'True'
+        res.headers['Access-Control-Allow-Origin'] = 'http://83.130.145.225:8080'
+        res.headers['Access-Control-Allow-Credentials'] = 'true'
         return res
     print(userID)
     id = int(userID)
-    u = User.query.filter(User.id == id).first()
-    g = geoData.query.filter(geoData.id == id).first()
-    s = studentData.query.filter(studentData.id == id).first()
-    cur = courseData.query.filter(courseData.userID == id).all()
-    course = []
-    for c in cur:
-        course.append(c.course)
-    data = {'name': u.name, 'email': u.email,'phone': u.phone ,'street':g.street,'streetNum':g.street_num,'city':g.city,'country':g.country,'location': {'lat': float(g.latitude), 'lng': float(g.longitude)},'institute':s.institute,'major':s.major,'year':s.year,'courses':course}
-    d = json.dumps(data)
-    print(d)
-    response = d, 200
+    try:
+        u = User.query.filter(User.id == id).first()
+        g = geoData.query.filter(geoData.id == id).first()
+        s = studentData.query.filter(studentData.id == id).first()
+        cur = courseData.query.filter(courseData.userID == id).all()
+        course = []
+        for c in cur:
+            course.append(c.course)
+        data = {'name': u.name, 'email': u.email,'phone': u.phone ,'street':g.street,'streetNum':g.street_num,'city':g.city,'country':g.country,'location': {'lat': float(g.latitude), 'lng': float(g.longitude)},'institute':s.institute,'major':s.major,'year':s.year,'courses':course}
+        d = json.dumps(data)
+        print(d)
+        response = d, 200
+    except:
+        d = 'user not exists'
+        response = d, 404
     res = app.make_response(response)
-    res.headers['Access-Control-Allow-Origin'] = '*'
-    res.headers['Access-Control-Allow-Credentials'] = 'True'
+    res.headers['Access-Control-Allow-Origin'] = 'http://83.130.145.225:8080'
+    res.headers['Access-Control-Allow-Credentials'] = 'true'
     return res
 
-@app.route('/add_user', methods=['POST', 'GET'])
+@app.route('/add_user', methods=['POST'])
 def add_user():
     user_form = UserForm()
     if request.method == 'POST':
@@ -336,11 +341,11 @@ def add_user():
             flash('User did not added')
             print("User failed to be added")
             id = 0
-            status = 500
+            status = 404
         response = jsonify(status=statusData),status
         res= app.make_response(response)
-        res.headers['Access-Control-Allow-Origin'] = '*'
-        res.headers['Access-Control-Allow-Credentials'] = 'True'
+        res.headers['Access-Control-Allow-Origin'] = 'http://83.130.145.225:8080'
+        res.headers['Access-Control-Allow-Credentials'] = 'true'
         res.set_cookie('userID', json.dumps(id))
         return res
         """""
