@@ -88,6 +88,9 @@ def test():
 
 @app.route('/add-user',methods=['POST','GET'])
 def add_user_data():
+    userID = request.cookies.get('userID')
+    if (userID == None):
+        return update_user_data()
     data = request.get_data()
     my_json = data.decode('utf8').replace("'", '"')
     data = json.loads(my_json)
@@ -213,6 +216,8 @@ def markers():
     userID = request.cookies.get('userID')
     users = db.session.query(User).all() # or you could have used User.query.all()
     print("user id", userID)
+    if userID == None:
+        userID = 0
     data = []
     try:
         for user in users:
@@ -237,19 +242,52 @@ def send_filter():
     data = json.loads(my_json)
     s = json.dumps(data, indent=4, sort_keys=True)
     print(s)
+    stu = []
+    institute = []
+    major = []
+    years = []
+    courses = []
     inst = data["institute"]
-    if inst == None:
-        inst = '*'
+    allUser = (User.query.all())
+    allUserIds=[]
+    for user in allUser:
+        allUserIds.append(user.id)
+    if inst != None:
+        #institute.append(studentData.query.filter(studentData.institute==inst).all())
+        for s in (studentData.query.filter(studentData.institute==inst).all()):
+            institute.append(s.id)
+    else:
+        institute = allUserIds
     maj = data["major"]
+    if maj != None:
+        #major.append(studentData.query.filter(studentData.major==maj).all())
+        for s in (studentData.query.filter(studentData.major==maj).all()):
+            major.append(s.id)
+    else:
+        major = allUserIds
     year = data["year"]
+    if year != None:
+        #years.append(studentData.query.filter(studentData.year==year).all())
+        for s in (studentData.query.filter(studentData.year==year).all()):
+            years.append(s.id)
+    else:
+        years = allUserIds
+    #stu = set(stu) #remove multiple results
     courseNum = data["course"]
-    selectedIds = []
-    stu = studentData.query.filter((studentData.institute==inst)&(studentData.major==maj)&(studentData.year==year)).all()
-    courses = courseData.query.filter(courseData.course == courseNum).all()
-    for s in stu:
-        selectedIds.append(s.id)
-    for c in courses:
-        selectedIds.append(c.userID)
+
+    #stu = studentData.query.filter((studentData.institute==inst)&(studentData.major==maj)&(studentData.year==year)).all()
+    if courseNum != None:
+        #courses = courseData.query.filter(courseData.course == courseNum).all()
+        for s in (courseData.query.filter(courseData.course == courseNum).all()):
+            courses.append(s.userID)
+    else:
+        if ((year == None) & (maj == None) & (inst == None)):
+            return markers()
+        else:
+            courses = allUserIds
+
+    selectedIds = set(institute) & set(major) & set(years) & set(courses)
+
     selectedIds = set(selectedIds) #remove multiple ids
     filterdData = []
     for id in selectedIds:
