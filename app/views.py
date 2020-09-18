@@ -89,8 +89,9 @@ def test():
 @app.route('/add-user',methods=['POST','GET'])
 def add_user_data():
     userID = request.cookies.get('userID')
-    if (userID == None):
-        return update_user_data()
+    data = request.get_data()
+    if (userID != None): #user exsits
+        return update_user_data(userID,data)
     data = request.get_data()
     my_json = data.decode('utf8').replace("'", '"')
     data = json.loads(my_json)
@@ -156,8 +157,8 @@ def add_user_data():
     return res
 
 @app.route('/update-user-info',methods=['POST','GET'])
-def update_user_data():
-    userID = request.cookies.get('userID')
+def update_user_data(userID , data):
+    #userID = request.cookies.get('userID')
     #userID = 3
     if (userID == None):
         d = "ERROR: didnt get user ID in cookie"
@@ -171,7 +172,7 @@ def update_user_data():
     selectedGeoData = geoData.query.filter(geoData.id == userID).first()
     selectedStuData = studentData.query.filter(studentData.id == userID).first()
     courseData.query.filter(courseData.userID == userID).delete()
-    data = request.get_data()
+    #data = request.get_data()
     my_json = data.decode('utf8').replace("'", '"')
     data = json.loads(my_json)
     s = json.dumps(data, indent=4, sort_keys=True)
@@ -237,6 +238,11 @@ def markers():
 
 @app.route('/send-filter',methods=['POST'])
 def send_filter():
+    userID = request.cookies.get('userID')
+    if userID == None:
+        userID = 0
+    else:
+        userID = int(userID)
     data = request.get_data()
     my_json = data.decode('utf8').replace("'", '"')
     data = json.loads(my_json)
@@ -289,6 +295,7 @@ def send_filter():
     selectedIds = set(institute) & set(major) & set(years) & set(courses)
 
     selectedIds = set(selectedIds) #remove multiple ids
+    selectedIds.remove(userID) # remove the current user id to avoid multiple markers
     filterdData = []
     for id in selectedIds:
         u = User.query.filter(User.id == id).first()
