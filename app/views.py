@@ -295,7 +295,10 @@ def send_filter():
     selectedIds = set(institute) & set(major) & set(years) & set(courses)
 
     selectedIds = set(selectedIds) #remove multiple ids
-    selectedIds.remove(userID) # remove the current user id to avoid multiple markers
+    try:
+        selectedIds.remove(userID) # remove the current user id to avoid multiple markers
+    except:
+        pass
     filterdData = []
     for id in selectedIds:
         u = User.query.filter(User.id == id).first()
