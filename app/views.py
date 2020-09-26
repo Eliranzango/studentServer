@@ -298,6 +298,8 @@ def send_filter():
     try:
         selectedIds.remove(userID) # remove the current user id to avoid multiple markers
     except:
+        print ("USER ID: ",userID)
+        print("UselectedIds: ", selectedIds)
         pass
     filterdData = []
     for id in selectedIds:
